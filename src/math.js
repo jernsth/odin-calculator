@@ -36,9 +36,18 @@ function extractNumber(expr) {
         i++;
     }
 
-    // Zahl extrahieren
-    while (i < expr.length && /[0-9.]/.test(expr[i])) {
-        extract += expr[i];
+    let dotUsed = false;
+    while (i < expr.length) {
+        const ch = expr[i];
+        if (ch === '.') {
+            if (dotUsed) break; // zweiter Punkt → Zahl zu Ende
+            dotUsed = true;
+            extract += ch;
+        } else if (/[0-9]/.test(ch)) {
+            extract += ch;
+        } else {
+            break;
+        }
         i++;
     }
 
@@ -47,7 +56,7 @@ function extractNumber(expr) {
 
 function evaluate(expression) {
     expression = expression.replace(/\s+/g, '').trim();
-    
+
     // Schritt 1: Zahlen & Operatoren extrahieren
     const numbers = [];
     const operators = [];
@@ -83,7 +92,7 @@ function evaluate(expression) {
         result = operate(result, numbers[i + 1], operators[i]);
     }
 
-    return result;
+    return Math.round(result * 100) / 100;
 }
 
 
