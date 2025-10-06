@@ -21,6 +21,7 @@ function operate(num1, num2, operator) {
         case "*": return mult(num1, num2);
         case "/": return divide(num1, num2);
         default:
+            console.log("default")
             return NaN;
     }
 }
@@ -29,54 +30,62 @@ function extractNumber(expr) {
     let extract = "";
     let i = 0;
 
+    // optionales Vorzeichen
     if (expr[i] === '-' || expr[i] === '+') {
         extract += expr[i];
-        i++
-    } else if (expr[i] === '*'  || expr[i] === '/' ) {
-        alert("invalid expression")
-        return { number: NaN, rest: " " }
+        i++;
     }
 
-    // Zahl extrahieren (auch Dezimalzahlen)
+    // Zahl extrahieren
     while (i < expr.length && /[0-9.]/.test(expr[i])) {
         extract += expr[i];
         i++;
     }
 
-    const restExpr = expr.slice(i);
-    return { number: Number(extract), rest: restExpr };
+    return { number: Number(extract), rest: expr.slice(i) };
 }
 
 function evaluate(expression) {
-    expression = expression.replace(/\s+/g, ''); // Leerzeichen entfernen
+    expression = expression.replace(/\s+/g, '').trim();
+    
+    // Schritt 1: Zahlen & Operatoren extrahieren
+    const numbers = [];
+    const operators = [];
 
-    // Basisfall: nur eine Zahl übrig
-    if (!isNaN(expression)) return Number(expression);
+    while (expression.length > 0) {
+        const { number, rest } = extractNumber(expression);
+        numbers.push(number);
+        expression = rest;
 
-    // 1. Erste Zahl extrahieren
-    let extract = extractNumber(expression);
-    let num1 = extract.number;
-    expression = extract.rest;
-
-    // 2. Operator extrahieren
-    let operator = expression[0];
-    expression = expression.slice(1);
-
-    // 3. Zweite Zahl extrahieren
-    let extract2 = extractNumber(expression);
-    let num2 = extract2.number;
-    expression = extract2.rest;
-
-    // 4. Operation ausführen
-    let result = operate(num1, num2, operator);
-
-    // 5. Falls noch etwas übrig ist, rekursiv weitermachen
-    if (expression.length > 0 && "+-*/".includes(expression[0])) {
-        return evaluate(String(result) + expression);
-    } else {
-        return result;
+        if (expression.length > 0) {
+            operators.push(expression[0]);
+            expression = expression.slice(1);
+        }
     }
+
+    // Schritt 2: * und / zuerst auswerten
+    for (let i = 0; i < operators.length; i++) {
+        if (operators[i] === '*' || operators[i] === '/') {
+            // console.log(numbers[i] + " , " + numbers[i + 1] + " , " + operators[i])
+            const res = operate(numbers[i], numbers[i + 1], operators[i]);
+            // console.log(res);
+            numbers.splice(i, 2, res);   // ersetze zwei Zahlen durch Ergebnis
+            operators.splice(i, 1);      // entferne Operator
+            i--; // Array kürzer geworden → Index korrigieren
+        }
+    }
+
+    // Schritt 3: + und - auswerten
+    let result = numbers[0];
+    console.log(operators.length)
+    for (let i = 0; i < operators.length; i++) {
+        // console.log(result + " , " + numbers[i + 1] + " , " + operators[i])
+        result = operate(result, numbers[i + 1], operators[i]);
+    }
+
+    return result;
 }
+
 
 
 
@@ -109,4 +118,3 @@ function generateCalculator() {
 }
 
 generateCalculator();
-console.log(evaluate("12+34*5"));
